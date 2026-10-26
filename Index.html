@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Training">
+<meta name="theme-color" content="#0f1115">
+<title>Training</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,system-ui,sans-serif;background:#0f1115;color:#e8eaed;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+header{padding:calc(14px + env(safe-area-inset-top)) 16px 4px}
+header h1{margin:0;font-size:22px}
+main{padding:0 12px}
+.card{background:#1a1d24;border-radius:14px;padding:14px;margin:10px 0}
+.muted{color:#9aa0a6;font-size:14px}
+.pad{padding:8px 4px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.between{justify-content:space-between;flex-wrap:nowrap}
+h2,h3{margin:0 0 6px}
+button,.btn{font:inherit;border:0;border-radius:10px;padding:12px 14px;color:#e8eaed;background:#2a2f3a;cursor:pointer;display:inline-block}
+.primary{background:#2f9e5b;color:#fff;width:100%;font-weight:600}
+.row .primary{width:auto}
+.ghost{background:#252a33}
+.sm{padding:8px 12px;font-size:14px}
+.danger{color:#ff8a80;margin-top:8px}
+.big{display:flex;justify-content:space-between;width:100%;margin:8px 0;padding:18px 16px;font-size:17px;font-weight:600;background:#1a1d24;text-align:left}
+.big span{color:#9aa0a6;font-weight:400}
+.ex.done{outline:2px solid #2f9e5b}
+.form{color:#7cc4ff;text-decoration:none;font-size:14px;white-space:nowrap}
+.last{font-size:13px;color:#f5c26b;margin:6px 0}
+.set{display:grid;grid-template-columns:22px 1fr 1fr 48px;gap:8px;align-items:center;margin-top:8px}
+.set input{width:100%;font-size:16px;padding:10px;border-radius:10px;border:1px solid #333a46;background:#0f1115;color:#e8eaed}
+.chk{padding:10px 0;font-size:18px;background:#252a33;color:#666}
+.chk.on{background:#2f9e5b;color:#fff}
+.hist{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #262a33;font-size:15px}
+.hist span:last-child{text-align:right;color:#c9ccd1;white-space:nowrap}
+.hist a{color:#7cc4ff;text-decoration:none}
+.wk{padding:6px 0}
+summary{cursor:pointer;font-size:15px}
+select,textarea{width:100%;font-size:16px;background:#0f1115;color:#e8eaed;border:1px solid #333a46;border-radius:10px;padding:10px}
+textarea{font-family:ui-monospace,monospace;font-size:12px}
+.chart{width:100%;margin-top:10px}
+.chart text{fill:#9aa0a6;font-size:11px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#151820;border-top:1px solid #262a33;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border-radius:0;padding:14px 0;font-size:13px;color:#9aa0a6}
+nav button.on{color:#7cf29c;font-weight:600}
+p{margin:4px 0;line-height:1.45}
+</style>
+</head>
+<body>
+<header><h1>Training</h1><div id="sub" class="muted"></div></header>
+<main id="view"></main>
+<nav>
+  <button data-tab="today">Workout</button>
+  <button data-tab="history">History</button>
+  <button data-tab="progress">Progress</button>
+  <button data-tab="plan">Plan</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+<script>
+const DEFAULT_PROGRAM = {
+  name: "Block 1: Rebuild",
+  start: "2026-10-26",
+  layout: [["Mon","Day 1: Lower A"],["Tue","Day 2: Upper A"],["Wed","Day 5: Core and Arms (5 day weeks)"],["Thu","Day 3: Lower B"],["Fri","Day 4: Upper B"],["Sat and Sun","Padel or basketball"]],
+  weeks: [
+    {w:1, dates:"Oct 26 to Oct 30", sets:2, focus:"2 sets per exercise, light weights. Learn the movements and check how your knee and shoulders feel the next day."},
+    {w:2, dates:"Nov 2 to Nov 6", focus:"Full 3 sets, same weights as week 1."},
+    {w:3, dates:"Nov 9 to Nov 13", focus:"Add a little weight (about 5 to 10%) on anything that felt easy."},
+    {w:4, dates:"Nov 16 to Nov 20", focus:"Add weight or 2 reps per set. Try 4 sets on hip thrusts and rows."}
+  ],
+  days: [
+    {id:"d1", name:"Day 1: Lower A", when:"Monday", exercises:[
+      {name:"Bike warm up", sets:1, reps:"5 to 8 min", note:"Easy pace", cardio:true},
+      {name:"Hip thrust", sets:3, reps:"10", note:"Upper back on bench, chin tucked, drive through heels"},
+      {name:"Dumbbell Romanian deadlift", sets:3, reps:"10", note:"Hips back, soft knees, flat back, stop at mid shin"},
+      {name:"Seated leg curl", sets:3, reps:"12", note:"Slow lowering"},
+      {name:"Leg press (short range)", sets:3, reps:"12", note:"Feet high, stop around 90 degrees at the knee"},
+      {name:"Hip abduction machine", sets:3, reps:"15", note:"Sit tall, push out with control"},
+      {name:"Calf raise", sets:3, reps:"15", note:"Full stretch, pause at the top"},
+      {name:"Dead bug", sets:3, reps:"10 per side", note:"Lower back pressed into the floor"}
+    ]},
+    {id:"d2", name:"Day 2: Upper A", when:"Tuesday", exercises:[
+      {name:"Band pull aparts", sets:2, reps:"15", note:"Warm up, arms straight"},
+      {name:"Lat pulldown (neutral grip)", sets:3, reps:"10", note:"To upper chest, never behind the neck"},
+      {name:"Seated cable row", sets:3, reps:"12", note:"Chest up, squeeze shoulder blades"},
+      {name:"Machine chest press (neutral grip)", sets:3, reps:"10", note:"Elbows tucked, stop at chest level"},
+      {name:"Face pulls", sets:3, reps:"15", note:"Light, rope to forehead, elbows high"},
+      {name:"Cable external rotation", sets:3, reps:"12 per arm", note:"Very light, elbow pinned to your side"},
+      {name:"Dumbbell curl", sets:3, reps:"12", note:"Elbows still, no swinging"},
+      {name:"Rope triceps pushdown", sets:3, reps:"12", note:"Spread the rope at the bottom"}
+    ]},
+    {id:"d5", name:"Day 5: Core and Arms", when:"Wednesday", exercises:[
+      {name:"Farmer's carry", sets:4, reps:"30 to 40 m", note:"Stand tall, shoulders back and down"},
+      {name:"Face pulls", sets:3, reps:"15", note:"Light, strict form"},
+      {name:"Cable external rotation", sets:2, reps:"12 per arm", note:"Very light"},
+      {name:"Incline dumbbell curl", sets:3, reps:"12", note:"Arms hang straight down behind your body"},
+      {name:"Rope triceps pushdown", sets:3, reps:"12", note:"Spread the rope at the bottom"},
+      {name:"Hanging knee raise", sets:3, reps:"10", note:"Curl your pelvis up, no swinging"},
+      {name:"Cable crunch", sets:3, reps:"12", note:"Round your spine down, hips still"},
+      {name:"Plank", sets:3, reps:"30 sec", note:"Straight line, squeeze glutes. Log seconds in the reps box"}
+    ]},
+    {id:"d3", name:"Day 3: Lower B", when:"Thursday", exercises:[
+      {name:"Incline walk warm up", sets:1, reps:"5 to 8 min", note:"Easy pace", cardio:true},
+      {name:"Back extension", sets:3, reps:"12", note:"Hinge at the hips, stop at a straight line"},
+      {name:"Cable pull through", sets:3, reps:"12", note:"Face away from the cable, hinge back, snap hips forward"},
+      {name:"Lying leg curl", sets:3, reps:"12", note:"Hips pressed into the pad"},
+      {name:"Single leg glute bridge", sets:3, reps:"10 per side", note:"Hips level"},
+      {name:"Cable glute kickback", sets:3, reps:"12 per side", note:"Small controlled kick, no lower back arch"},
+      {name:"Side plank", sets:3, reps:"20 to 30 sec per side", note:"Hips lifted. Log seconds in the reps box"},
+      {name:"Pallof press", sets:3, reps:"10 per side", note:"Press straight out, resist the rotation"}
+    ]},
+    {id:"d4", name:"Day 4: Upper B", when:"Friday", exercises:[
+      {name:"Band pull aparts", sets:2, reps:"15", note:"Warm up, arms straight"},
+      {name:"Chest supported row", sets:3, reps:"10", note:"Chest on an incline bench, pull elbows back"},
+      {name:"Assisted pull up", sets:3, reps:"8", note:"Or close grip pulldown. Log the assistance weight"},
+      {name:"Push ups", sets:3, reps:"8 to 12", note:"Hands on a bench if needed, body straight"},
+      {name:"Straight arm cable pulldown", sets:3, reps:"12", note:"Arms nearly straight, sweep down to thighs"},
+      {name:"Face pulls", sets:3, reps:"15", note:"Light, strict form"},
+      {name:"Hammer curl", sets:3, reps:"12", note:"Palms facing each other"},
+      {name:"Lying dumbbell triceps extension", sets:3, reps:"12", note:"Elbows point to the ceiling"}
+    ]}
+  ],
+  notes: [
+    {title:"3 or 4 day weeks", text:"4 days: skip Wednesday. 3 days: Day 1 Monday, Day 2 Wednesday, then alternate Day 3 and Day 4 on Fridays."},
+    {title:"Joint safety", text:"Leave 2 or 3 reps in the tank. Muscle soreness is fine, but sharp pain, pinching, or pain inside the joint means stop that exercise for the day. If something feels worse the next morning, drop the weight next session. No squats, lunges, overhead pressing, flies, upright rows, or dips."},
+    {title:"Mondays after the weekend", text:"If your knee is sore from padel or basketball, lighten the leg press and RDLs or swap the leg press for an extra set of hip thrusts."},
+    {title:"Weekend games", text:"Warm up 10 minutes first: light jog, side shuffles, glute bridges, leg swings. Keep it moderate for the first few weekends, avoid hard landings, and consider a knee sleeve."},
+    {title:"Nutrition and recovery", text:"Protein about 1.6 to 2.2 g per kg of body weight daily, eaten first at meals. Water plus electrolytes on training and game days. Sleep 7 to 9 hours. Optional creatine 3 to 5 g daily. Tell your prescriber if you feel unusually tired or lightheaded during training."},
+    {title:"Tracking", text:"Progress photos and a waist measurement at the start and end of each block. If your lifts hold or rise while the scale drops, you are keeping muscle."}
+  ]
+};
+
+const KEY = "berhanTraining.v1";
+const clone = o => JSON.parse(JSON.stringify(o));
+let S = load(), tab = "today", progEx = "";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const formUrl = n => "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(n + " exercise proper form");
+
+function load(){
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.program) return s; } catch(e){}
+  return {program: clone(DEFAULT_PROGRAM), sessions: [], unit: "lb", draft: null};
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+function localISO(d){ d = new Date(d); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+function todayISO(){ return localISO(new Date()); }
+function mondayISO(){ const d = new Date(); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return localISO(d); }
+function weekInfo(){
+  const p = S.program, start = new Date(p.start + "T00:00");
+  const n = Math.floor((new Date() - start) / (7 * 864e5)) + 1;
+  return {n, w: (p.weeks || []).find(x => x.w === n)};
+}
+function sorted(){ return [...S.sessions].sort((a,b) => a.date.localeCompare(b.date) || a.id - b.id); }
+function lastFor(name){
+  const list = sorted();
+  for (let i = list.length - 1; i >= 0; i--){
+    const e = list[i].entries.find(x => x.name === name && !x.cardio);
+    if (e){ const sets = e.sets.filter(s => s.w || s.r); if (sets.length) return {date: list[i].date, sets}; }
+  }
+  return null;
+}
+
+function startDay(id){
+  const d = S.program.days.find(x => x.id === id), {w} = weekInfo();
+  S.draft = {dayId: id, dayName: d.name, date: todayISO(), entries: d.exercises.map(x => {
+    const n = x.cardio ? 1 : (w && w.sets ? Math.min(w.sets, x.sets) : x.sets);
+    const last = lastFor(x.name);
+    return {name: x.name, target: (x.cardio ? "" : n + " x ") + x.reps, note: x.note || "", cardio: !!x.cardio,
+      sets: Array.from({length: n}, (_, k) => ({w: last && last.sets[k] ? last.sets[k].w : "", r: "", done: false}))};
+  })};
+  save(); render(); scrollTo(0,0);
+}
+
+function finish(){
+  const dr = S.draft;
+  const done = dr.entries.filter(e => e.sets.some(s => s.done || s.w || s.r)).length;
+  S.sessions.push({id: Date.now(), date: dr.date, dayId: dr.dayId, dayName: dr.dayName,
+    completed: done + "/" + dr.entries.length, entries: dr.entries.map(e => ({name: e.name, cardio: e.cardio, sets: e.sets}))});
+  S.draft = null; save(); tab = "history"; render(); scrollTo(0,0);
+}
+
+function renderToday(){
+  const {n, w} = weekInfo(), p = S.program;
+  let h = `<div class="card"><b>${esc(p.name)}</b><div class="muted">${
+    w ? `Week ${n} (${esc(w.dates)}): ${esc(w.focus)}` : n < 1 ? `Starts ${esc(p.start)}` : `Block finished. Load next month's program in Settings.`}</div></div>`;
+  if (!S.draft){
+    h += `<div class="muted pad">Pick today's workout</div>` +
+      p.days.map(d => `<button class="big" data-start="${d.id}">${esc(d.name)}<span>${esc(d.when || "")}</span></button>`).join("");
+  } else {
+    const dr = S.draft;
+    h += `<div class="row between pad"><h2>${esc(dr.dayName)}</h2><button class="ghost sm" data-act="cancel">Discard</button></div>`;
+    dr.entries.forEach((e, i) => {
+      const last = lastFor(e.name), allDone = e.sets.every(s => s.done);
+      h += `<div class="card ex ${allDone ? "done" : ""}">
+        <div class="row between" style="margin:0"><div><b>${esc(e.name)}</b><div class="muted">${esc(e.target)}${e.note ? " · " + esc(e.note) : ""}</div></div>
+        <a class="form" target="_blank" href="${formUrl(e.name)}">Form</a></div>
+        ${last ? `<div class="last">Last (${esc(last.date)}): ${last.sets.map(s => `${esc(s.w || 0)}${S.unit} x ${esc(s.r || 0)}`).join(", ")}</div>` : ""}
+        ${e.cardio
+          ? `<div class="row"><button class="chk ${e.sets[0].done ? "on" : ""}" style="width:100%" data-done="${i}:0">${e.sets[0].done ? "Done ✓" : "Mark done"}</button></div>`
+          : e.sets.map((s, j) => `<div class="set"><span class="muted">${j + 1}</span>
+              <input inputmode="decimal" placeholder="${S.unit}" value="${esc(s.w)}" data-e="${i}" data-s="${j}" data-f="w">
+              <input inputmode="numeric" placeholder="reps" value="${esc(s.r)}" data-e="${i}" data-s="${j}" data-f="r">
+              <button class="chk ${s.done ? "on" : ""}" data-done="${i}:${j}">✓</button></div>`).join("") +
+            `<div class="row"><button class="ghost sm" data-add="${i}">+ Set</button>${e.sets.length > 1 ? `<button class="ghost sm" data-rm="${i}">Remove set</button>` : ""}</div>`}
+      </div>`;
+    });
+    h += `<button class="primary" data-act="finish">Finish workout</button>`;
+  }
+  $("#view").innerHTML = h;
+}
+
+function renderHistory(){
+  const list = sorted().reverse();
+  if (!list.length){ $("#view").innerHTML = `<div class="card muted">No workouts logged yet. Finish one and it shows up here.</div>`; return; }
+  const mon = mondayISO(), wk = S.sessions.filter(s => s.date >= mon).length;
+  $("#view").innerHTML = `<div class="card"><b>${S.sessions.length}</b> workouts logged · <b>${wk}</b> this week</div>` +
+    list.map(s => `<details class="card"><summary><b>${esc(s.date)}</b> ${esc(s.dayName)} <span class="muted">(${esc(s.completed)})</span></summary>
+      ${s.entries.filter(e => e.sets.some(x => x.w || x.r || x.done)).map(e => `<div class="hist"><span>${esc(e.name)}</span><span>${
+        e.cardio ? "done" : e.sets.filter(x => x.w || x.r).map(x => `${esc(x.w || 0)} x ${esc(x.r || 0)}`).join(", ")}</span></div>`).join("")}
+      <button class="ghost sm danger" data-del="${s.id}">Delete workout</button></details>`).join("");
+}
+
+function chart(pts){
+  if (pts.length < 2) return `<div class="muted pad">Log this exercise at least twice to see the chart.</div>`;
+  const W = 320, H = 160, P = 30, ys = pts.map(p => p.w);
+  let mn = Math.min(...ys), mx = Math.max(...ys); if (mn === mx){ mn -= 5; mx += 5; }
+  const x = i => P + i * (W - P - 10) / (pts.length - 1), y = v => H - 20 - (v - mn) * (H - 40) / (mx - mn);
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.w).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart"><text x="0" y="${y(mx) + 4}">${mx}</text><text x="0" y="${y(mn) + 4}">${mn}</text>
+    <path d="${d}" fill="none" stroke="#7cf29c" stroke-width="2.5"/>${pts.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.w)}" r="3.5" fill="#7cf29c"/>`).join("")}</svg>`;
+}
+
+function renderProgress(){
+  const names = [...new Set(sorted().flatMap(s => s.entries.filter(e => !e.cardio && e.sets.some(x => parseFloat(x.w))).map(e => e.name)))];
+  if (!names.length){ $("#view").innerHTML = `<div class="card muted">Log some weights and your progress charts will appear here.</div>`; return; }
+  if (!names.includes(progEx)) progEx = names[0];
+  const pts = sorted().map(s => {
+    const e = s.entries.find(x => x.name === progEx); if (!e) return null;
+    const ws = e.sets.map(x => parseFloat(x.w)).filter(v => !isNaN(v));
+    return ws.length ? {date: s.date, w: Math.max(...ws), sets: e.sets.filter(x => x.w || x.r)} : null;
+  }).filter(Boolean);
+  $("#view").innerHTML = `<div class="card"><select id="progEx">${names.map(n => `<option ${n === progEx ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
+    <div class="muted" style="margin-top:8px">Top set weight (${S.unit})</div>${chart(pts)}</div>
+    <div class="card">${pts.slice().reverse().map(p => `<div class="hist"><span>${esc(p.date)}</span><span>${p.sets.map(x => `${esc(x.w || 0)} x ${esc(x.r || 0)}`).join(", ")}</span></div>`).join("")}</div>`;
+}
+
+function renderPlan(){
+  const p = S.program;
+  $("#view").innerHTML = `<div class="card"><b>${esc(p.name)}</b><div class="muted">Starts ${esc(p.start)}</div></div>
+    <div class="card"><h3>Weekly layout</h3>${(p.layout || []).map(l => `<div class="hist"><span>${esc(l[0])}</span><span>${esc(l[1])}</span></div>`).join("")}</div>
+    <div class="card"><h3>Progression</h3>${(p.weeks || []).map(w => `<div class="wk"><b>Week ${w.w}</b> <span class="muted">${esc(w.dates)}</span><div>${esc(w.focus)}</div></div>`).join("")}</div>
+    ${p.days.map(d => `<div class="card"><h3>${esc(d.name)} <span class="muted">${esc(d.when || "")}</span></h3>${d.exercises.map(e =>
+      `<div class="hist"><span><a target="_blank" href="${formUrl(e.name)}">${esc(e.name)}</a><br><small class="muted">${esc(e.note || "")}</small></span><span>${e.cardio ? "" : e.sets + " x "}${esc(e.reps)}</span></div>`).join("")}</div>`).join("")}
+    ${(p.notes || []).map(n => `<div class="card"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p></div>`).join("")}`;
+}
+
+function renderSettings(){
+  $("#view").innerHTML = `<div class="card"><h3>Units</h3><div class="row">
+      <button class="${S.unit === "lb" ? "primary" : "ghost"} sm" data-unit="lb">lb</button>
+      <button class="${S.unit === "kg" ? "primary" : "ghost"} sm" data-unit="kg">kg</button></div></div>
+    <div class="card"><h3>Backup</h3><p class="muted">Your data lives on this phone only. Export a backup every week or two.</p>
+      <div class="row"><button class="ghost sm" data-act="export">Export backup</button>
+      <label class="btn ghost sm">Import backup<input type="file" accept=".json,application/json" id="imp" hidden></label></div></div>
+    <div class="card"><h3>Monthly program</h3><p class="muted">Paste a new program here each month and tap Save. Your history and charts are kept.</p>
+      <textarea id="prog" rows="12">${esc(JSON.stringify(S.program, null, 1))}</textarea>
+      <div class="row"><button class="primary sm" data-act="saveprog">Save program</button><button class="ghost sm" data-act="resetprog">Reset to Block 1</button></div></div>`;
+}
+
+async function exportData(){
+  const name = "training-backup-" + todayISO() + ".json";
+  const blob = new Blob([JSON.stringify(S, null, 1)], {type: "application/json"});
+  const file = new File([blob], name, {type: "application/json"});
+  if (navigator.canShare && navigator.canShare({files: [file]})){
+    try { await navigator.share({files: [file]}); return; } catch(e){ if (e.name === "AbortError") return; }
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+}
+
+function render(){
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  $("#sub").textContent = new Date().toLocaleDateString(undefined, {weekday: "long", month: "short", day: "numeric"});
+  ({today: renderToday, history: renderHistory, progress: renderProgress, plan: renderPlan, settings: renderSettings})[tab]();
+}
+
+document.querySelector("nav").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (b){ tab = b.dataset.tab; render(); scrollTo(0,0); }
+});
+
+$("#view").addEventListener("input", e => {
+  const t = e.target;
+  if (t.dataset.f && S.draft){ S.draft.entries[t.dataset.e].sets[t.dataset.s][t.dataset.f] = t.value; save(); }
+});
+
+$("#view").addEventListener("change", e => {
+  const t = e.target;
+  if (t.id === "progEx"){ progEx = t.value; render(); }
+  if (t.id === "imp" && t.files[0]){
+    t.files[0].text().then(txt => {
+      try {
+        const d = JSON.parse(txt); if (!d.program || !Array.isArray(d.sessions)) throw 0;
+        if (confirm("Replace everything on this phone with this backup?")){ S = d; save(); render(); alert("Backup restored"); }
+      } catch(err){ alert("That file is not a valid backup."); }
+    });
+  }
+});
+
+$("#view").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const d = t.dataset;
+  if ("start" in d) startDay(d.start);
+  else if ("done" in d){ const [i, j] = d.done.split(":"); const s = S.draft.entries[i].sets[j]; s.done = !s.done; save(); render(); }
+  else if ("add" in d){ const ex = S.draft.entries[d.add], prev = ex.sets[ex.sets.length - 1]; ex.sets.push({w: prev ? prev.w : "", r: "", done: false}); save(); render(); }
+  else if ("rm" in d){ S.draft.entries[d.rm].sets.pop(); save(); render(); }
+  else if ("del" in d){ if (confirm("Delete this workout?")){ S.sessions = S.sessions.filter(x => String(x.id) !== d.del); save(); render(); } }
+  else if ("unit" in d){ S.unit = d.unit; save(); render(); }
+  else if (d.act === "cancel"){ if (confirm("Discard this workout?")){ S.draft = null; save(); render(); } }
+  else if (d.act === "finish") finish();
+  else if (d.act === "export") exportData();
+  else if (d.act === "saveprog"){
+    try {
+      const p = JSON.parse($("#prog").value); if (!p.days || !p.start) throw 0;
+      S.program = p; S.draft = null; save(); alert("Program saved"); tab = "plan"; render();
+    } catch(err){ alert("Could not read that program. Check the text you pasted."); }
+  }
+  else if (d.act === "resetprog"){ if (confirm("Reset the program to Block 1? History is kept.")){ S.program = clone(DEFAULT_PROGRAM); save(); render(); } }
+});
+
+render();
+</script>
+</body>
+</html>
