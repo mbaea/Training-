@@ -75,6 +75,7 @@ p{margin:4px 0;line-height:1.45}
 .chkline input{width:auto}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 label.muted input{margin-top:4px}
+.pbest{font-size:13px;color:var(--ok);margin-top:4px}
 </style>
 </head>
 <body>
@@ -89,107 +90,34 @@ label.muted input{margin-top:4px}
   <button data-tab="plan"><i>✎</i>Plan</button>
 </nav>
 <script>
-const DEFAULT_PROGRAM = {
-  v: 3,
-  name: "Block 1: Build (Upper/Lower)",
-  start: "2026-10-26",
-  layout: [["Mon","Day 1: Lower A"],["Tue","Day 2: Upper A"],["Wed","Day 5: Arms and Core (optional)"],["Thu","Day 3: Lower B"],["Fri","Day 4: Upper B"],["Sat and Sun","Padel or basketball"]],
-  weeks: [
-    {w:1, dates:"Oct 26 to Oct 30", focus:"Find your working weights. 1 warm up set, then 3 working sets. The last set should end 2 or 3 reps short of failure."},
-    {w:2, dates:"Nov 2 to Nov 6", focus:"Same weights, chase more reps. Hit the top of the rep range on all 3 sets? Go heavier next session."},
-    {w:3, dates:"Nov 9 to Nov 13", focus:"Keep adding weight on anything where you hit the top of the range. Small jumps are fine."},
-    {w:4, dates:"Nov 16 to Nov 20", focus:"Push the last set of each main lift to 1 rep short of failure. Note your best weights for Block 2."}
-  ],
-  days: [
-    {id:"d1", name:"Day 1: Lower A", when:"Monday", color:"#2dd4bf", exercises:[
-      {name:"Bike warm up", sets:1, reps:"5 min", note:"Easy pace, get the knees warm", cardio:true, alts:["Incline walk","Elliptical"]},
-      {name:"Leg press", sets:3, reps:"8 to 12", note:"Feet shoulder width, mid platform. Lower as deep as the knee feels good, no lockout at the top", alts:["Single leg press","Leg extension"]},
-      {name:"Hip thrust", sets:3, reps:"8 to 12", note:"Pause 1 sec at the top, chin tucked, ribs down", alts:["Hip thrust machine","Barbell glute bridge"]},
-      {name:"Leg extension", sets:3, reps:"12 to 15", note:"Squeeze 1 sec at the top, 3 sec down. Go lighter if the left knee feels off", alts:["Single leg extension"]},
-      {name:"Seated leg curl", sets:3, reps:"10 to 12", note:"Lean slightly forward, slow on the way back", alts:["Lying leg curl"]},
-      {name:"Hip abduction machine", sets:3, reps:"15 to 20", note:"Lean slightly forward to hit more glute", alts:["Cable hip abduction","Banded side steps"]},
-      {name:"Calf raise", sets:3, reps:"12 to 15", note:"Full stretch at the bottom, 1 sec pause", alts:["Leg press calf raise","Seated calf raise"]},
-      {name:"Cable crunch", sets:3, reps:"12 to 15", note:"Round your spine down, hips stay still", alts:["Machine crunch","Reverse crunch"]}
-    ]},
-    {id:"d2", name:"Day 2: Upper A", when:"Tuesday", color:"#a78bfa", exercises:[
-      {name:"Band pull aparts", sets:1, reps:"2 x 20", note:"Shoulder warm up, arms straight", cardio:true, alts:["Light face pulls"]},
-      {name:"Lat pulldown (neutral grip)", sets:3, reps:"8 to 12", note:"Pull to upper chest, chest up, control the way up", alts:["Wide grip lat pulldown","Machine pulldown"]},
-      {name:"Machine chest press (neutral grip)", sets:3, reps:"8 to 12", note:"Handles at mid chest, elbows about 45 degrees, stop at chest level", alts:["Push ups","Cable chest press"]},
-      {name:"Chest supported row", sets:3, reps:"8 to 12", note:"Chest on the pad, drive elbows back, squeeze 1 sec", alts:["Machine row","Seated cable row"]},
-      {name:"Incline machine press", sets:3, reps:"10 to 12", note:"Upper chest. Skip it if the shoulder complains", alts:["Incline push ups","Cable chest press"]},
-      {name:"Face pulls", sets:3, reps:"15", note:"Rope to forehead, elbows high, pull the rope apart", alts:["Band face pulls"]},
-      {name:"Dumbbell curl", sets:3, reps:"10 to 12", note:"Elbows still, no swinging", alts:["EZ bar curl","Cable curl"]},
-      {name:"Rope triceps pushdown", sets:3, reps:"10 to 12", note:"Elbows pinned, spread the rope at the bottom", alts:["Straight bar pushdown","Single arm cable pushdown"]}
-    ]},
-    {id:"d5", name:"Day 5: Arms and Core", when:"Wednesday (optional)", color:"#fbbf24", exercises:[
-      {name:"Farmer's carry", sets:3, reps:"40 m", note:"Heavy, stand tall, shoulders back and down", alts:["Suitcase carry"]},
-      {name:"Machine shrug", sets:3, reps:"12 to 15", note:"Straight up, pause at the top, no rolling", alts:["Dumbbell shrug"]},
-      {name:"Preacher curl", sets:3, reps:"10 to 12", note:"Full stretch at the bottom, no bouncing", alts:["Cable curl","EZ bar curl"]},
-      {name:"Incline dumbbell curl", sets:3, reps:"10 to 12", note:"Arms hang straight down behind your body", alts:["Cable curl"]},
-      {name:"Straight bar pushdown", sets:3, reps:"12", note:"Elbows pinned to your sides", alts:["Rope triceps pushdown"]},
-      {name:"Pallof press", sets:3, reps:"10 per side", note:"Press straight out, resist the rotation", alts:["Band Pallof press"]},
-      {name:"Plank", sets:3, reps:"45 sec", note:"Squeeze glutes and abs. Log seconds in the reps box", alts:["Hollow body hold"]},
-      {name:"Seated calf raise", sets:3, reps:"15 to 20", note:"Slow, full range", alts:["Leg press calf raise"]}
-    ]},
-    {id:"d3", name:"Day 3: Lower B", when:"Thursday", color:"#34d399", exercises:[
-      {name:"Incline walk warm up", sets:1, reps:"5 min", note:"Easy pace", cardio:true, alts:["Bike warm up","Elliptical"]},
-      {name:"Back extension", sets:3, reps:"10 to 12", note:"Hinge at the hips, stop at a straight line. Hold a plate once 15 reps is easy", alts:["Reverse hyper","Cable pull through"]},
-      {name:"Single leg press", sets:3, reps:"10 to 12 per leg", note:"Foot mid platform, controlled depth. Start with the right leg", alts:["Leg press"]},
-      {name:"Lying leg curl", sets:3, reps:"10 to 12", note:"Hips pressed into the pad, 3 sec down", alts:["Seated leg curl"]},
-      {name:"Cable pull through", sets:3, reps:"12 to 15", note:"Face away from the cable, hinge back, snap hips forward", alts:["Glute bridge"]},
-      {name:"Single leg extension", sets:3, reps:"12 per leg", note:"Light and controlled, squeeze at the top", alts:["Leg extension"]},
-      {name:"Cable glute kickback", sets:3, reps:"12 to 15 per side", note:"Kick back and slightly out, no lower back arch", alts:["Glute kickback machine"]},
-      {name:"Seated calf raise", sets:3, reps:"15 to 20", note:"Slow, full range", alts:["Leg press calf raise"]},
-      {name:"Hanging knee raise", sets:3, reps:"10 to 15", note:"Curl your pelvis up, no swinging", alts:["Captain's chair knee raise","Reverse crunch"]}
-    ]},
-    {id:"d4", name:"Day 4: Upper B", when:"Friday", color:"#818cf8", exercises:[
-      {name:"Band pull aparts", sets:1, reps:"2 x 20", note:"Shoulder warm up, arms straight", cardio:true, alts:["Light face pulls"]},
-      {name:"Seated cable row", sets:3, reps:"8 to 12", note:"Chest up, pull to your belly button, squeeze shoulder blades", alts:["Machine row","Chest supported row"]},
-      {name:"Single arm lat pulldown", sets:3, reps:"10 to 12 per arm", note:"Pull the elbow down to your hip, full stretch at the top", alts:["Lat pulldown (neutral grip)","Kneeling single arm cable pulldown"]},
-      {name:"Push ups", sets:3, reps:"8 to 15", note:"Stop 2 reps short of failure. Add a plate on your back when 15 is easy", alts:["Machine chest press (neutral grip)","Cable chest press"]},
-      {name:"Straight arm cable pulldown", sets:3, reps:"12 to 15", note:"Arms nearly straight, sweep down to your thighs", alts:["Band straight arm pulldown"]},
-      {name:"Face pulls", sets:3, reps:"15", note:"Rope to forehead, elbows high", alts:["Band face pulls"]},
-      {name:"Cable external rotation", sets:2, reps:"15 per arm", note:"Very light, elbow pinned to your side", alts:["Band external rotation"]},
-      {name:"Hammer curl", sets:3, reps:"10 to 12", note:"Palms facing each other", alts:["Rope cable curl"]},
-      {name:"Lying dumbbell triceps extension", sets:3, reps:"10 to 12", note:"Lying on the bench, elbows point to the ceiling", alts:["EZ bar skull crusher","Rope triceps pushdown"]}
-    ]}
-  ],
-  notes: [
-    {title:"How to run each session", text:"Do 1 light warm up set on the first two exercises (don't log it). Then 3 working sets, adding weight between sets if it feels easy. Rest about 2 minutes on the big lifts and 60 to 90 seconds on everything else."},
-    {title:"How to progress", text:"Each exercise has a rep range. When you hit the top of the range on all 3 sets, go heavier next session. If you can't reach the bottom of the range, the weight is too heavy."},
-    {title:"3 or 4 day weeks", text:"4 days: skip Wednesday. 3 days: Day 1, Day 2, then alternate Day 3 and Day 4 each Friday. If you play padel or basketball midweek, skip Day 5 that week."},
-    {title:"Joint safety", text:"No squats, deadlifts, lunges, pull ups, bench pressing, overhead pressing, or flies. Sharp pain or pain inside the joint means stop that exercise for the day. If the left knee feels weird on leg press or leg extension, shorten the range, go lighter, or use the alternative."},
-    {title:"Nutrition and recovery", text:"Aim for about 180 to 220 g of protein daily, eaten first at every meal, even when you're not hungry. Water plus electrolytes on training and game days. Sleep 7 to 9 hours. Tell your prescriber if you feel unusually tired or lightheaded during training."},
-    {title:"Tracking", text:"Progress photos and a waist measurement at the start and end of each block. If your lifts hold or rise while the scale drops, you are keeping muscle."}
-  ]
-};
+// Block 2 is built in. Programs older than version 4 are replaced by it on first load.
+const DEFAULT_PROGRAM = {"v": 4, "name": "Block 2: Build (Upper/Lower)", "start": "2026-11-23", "layout": [["Mon", "Day 1: Lower A"], ["Tue", "Day 2: Upper A"], ["Wed", "Day 5: Arms and Core (optional)"], ["Thu", "Day 3: Lower B"], ["Fri", "Day 4: Upper B"], ["Sat", "Padel"], ["Sun", "Rest"]], "weeks": [{"w": 1, "dates": "Nov 23 to Nov 27", "focus": "Lighter week. Use about 85% of your Block 1 top weights and stop 3 to 4 reps short of failure. This week starts Tuesday: run Day 1 to Day 4 Tue to Fri and skip Day 5."}, {"w": 2, "dates": "Nov 30 to Dec 4", "focus": "Back to your Block 1 top weights. Every logged set should feel hard, ending 2 or 3 reps short of failure, with the last set the hardest."}, {"w": 3, "dates": "Dec 7 to Dec 11", "focus": "Hit the top of the rep range on all 3 sets? Add weight next session."}, {"w": 4, "dates": "Dec 14 to Dec 18", "focus": "Add a 4th set to the first two exercises each day. Last set 1 rep short of failure. Note your best weights for Block 3."}], "days": [{"id": "d1", "name": "Day 1: Lower A", "when": "Monday", "color": "#2dd4bf", "exercises": [{"name": "Bike warm up", "sets": 1, "reps": "5 min", "note": "Easy pace, get the knees warm", "cardio": true, "alts": ["Incline walk"]}, {"name": "Leg press", "sets": 3, "reps": "10 to 12", "note": "Light warm up first (not logged), then 3 hard sets. Log total plates", "alts": ["Leg extension"]}, {"name": "Hip thrust", "sets": 3, "reps": "10 to 12", "note": "Pause 1 sec at the top, chin tucked", "alts": ["Hip thrust machine", "Barbell glute bridge"]}, {"name": "Leg extension", "sets": 3, "reps": "10 to 12", "note": "Squeeze 1 sec at the top, 3 sec down", "alts": ["Single leg extension"]}, {"name": "Seated leg curl", "sets": 3, "reps": "10 to 12", "note": "Lean slightly forward, slow on the way back", "alts": ["Lying leg curl"]}, {"name": "Hip abduction machine", "sets": 3, "reps": "15 to 20", "note": "Lean slightly forward for more glute", "alts": ["Banded side steps"]}, {"name": "Calf raise", "sets": 3, "reps": "12 to 15", "note": "Full stretch at the bottom, 1 sec pause", "alts": ["Leg press calf raise", "Seated calf raise"]}, {"name": "Machine crunch", "sets": 3, "reps": "12 to 15", "note": "Round your spine down, slow return", "alts": ["Cable crunch"]}]}, {"id": "d2", "name": "Day 2: Upper A", "when": "Tuesday", "color": "#a78bfa", "exercises": [{"name": "Band pull aparts", "sets": 1, "reps": "2 x 20", "note": "Shoulder warm up", "cardio": true, "alts": ["Light face pulls"]}, {"name": "Lat pulldown (neutral grip)", "sets": 3, "reps": "10 to 12", "note": "Pull to upper chest, control the way up", "alts": ["Single arm lat pulldown"]}, {"name": "Machine chest press (neutral grip)", "sets": 3, "reps": "10 to 12", "note": "Converging machine. Handles at mid chest, stop at chest level", "alts": ["Iso lateral decline press"]}, {"name": "Machine row", "sets": 3, "reps": "10 to 12", "note": "Diverging row by the office. Chest on pad, squeeze 1 sec", "alts": ["Seated cable row"]}, {"name": "Iso lateral decline press", "sets": 3, "reps": "10 to 12", "note": "Elbows about 45 degrees, controlled", "alts": ["Machine chest press (neutral grip)"]}, {"name": "Cable chest press", "sets": 3, "reps": "12 to 15", "note": "CABLE BLOCK 1 of 4, big cable machine by the dumbbells. Handles set low, press up and forward for upper chest", "alts": ["Incline push ups"]}, {"name": "Face pulls", "sets": 3, "reps": "15", "note": "CABLE BLOCK 2 of 4. Rope to forehead, elbows high", "alts": ["Band face pulls"]}, {"name": "Rope triceps pushdown", "sets": 3, "reps": "10 to 12", "note": "CABLE BLOCK 3 of 4. Elbows pinned, spread the rope", "alts": ["Straight bar pushdown"]}, {"name": "Cable curl", "sets": 3, "reps": "10 to 12", "note": "CABLE BLOCK 4 of 4. Straight bar, elbows still", "alts": ["Dumbbell curl"]}]}, {"id": "d5", "name": "Day 5: Arms and Core", "when": "Wednesday (optional)", "color": "#fbbf24", "exercises": [{"name": "Farmer's carry", "sets": 3, "reps": "40 m", "note": "Heavy dumbbells, stand tall", "alts": ["Suitcase carry"]}, {"name": "Dumbbell shrug", "sets": 3, "reps": "12 to 15", "note": "Straight up, pause at the top", "alts": ["Machine shrug"]}, {"name": "Incline dumbbell curl", "sets": 3, "reps": "10 to 12", "note": "Arms hang straight down behind you", "alts": ["Preacher curl"]}, {"name": "EZ bar skull crusher", "sets": 3, "reps": "10 to 12", "note": "Lower to the forehead, elbows point up", "alts": ["Lying dumbbell triceps extension"]}, {"name": "Cable curl", "sets": 3, "reps": "12 to 15", "note": "CABLE BLOCK 1 of 3. Straight bar, squeeze at the top", "alts": ["Rope cable curl"]}, {"name": "Straight bar pushdown", "sets": 3, "reps": "12 to 15", "note": "CABLE BLOCK 2 of 3. Same bar, elbows pinned", "alts": ["Rope triceps pushdown"]}, {"name": "Pallof press", "sets": 3, "reps": "10 per side", "note": "CABLE BLOCK 3 of 3. Handle at chest height, resist the rotation", "alts": ["Band Pallof press"]}, {"name": "Captain's chair knee raise", "sets": 3, "reps": "10 to 15", "note": "Curl your pelvis up, no swinging", "alts": ["Reverse crunch"]}, {"name": "Plank", "sets": 3, "reps": "45 sec", "note": "Log seconds in the reps box", "alts": ["Hollow body hold"]}]}, {"id": "d3", "name": "Day 3: Lower B", "when": "Thursday", "color": "#34d399", "exercises": [{"name": "Incline walk warm up", "sets": 1, "reps": "5 min", "note": "Elevation 8, speed 3.0", "cardio": true, "alts": ["Bike warm up"]}, {"name": "Back extension", "sets": 3, "reps": "10 to 12", "note": "Hold a plate, hinge at the hips, stop at a straight line", "alts": ["Reverse hyper"]}, {"name": "Leg press", "sets": 3, "reps": "12 to 15", "note": "Lighter than Day 1. Feet high on the platform for glutes and hamstrings", "alts": ["Single leg press"]}, {"name": "Seated leg curl", "sets": 3, "reps": "12 to 15", "note": "3 sec on the way back, full stretch", "alts": ["Lying leg curl"]}, {"name": "Leg extension", "sets": 3, "reps": "12 to 15", "note": "Lighter than Day 1, squeeze at the top", "alts": ["Single leg extension"]}, {"name": "Cable pull through", "sets": 3, "reps": "12 to 15", "note": "CABLE BLOCK 1 of 3. Rope low, hinge back, snap hips forward", "alts": ["Glute bridge"]}, {"name": "Cable glute kickback", "sets": 3, "reps": "12 to 15 per side", "note": "CABLE BLOCK 2 of 3. Ankle strap, kick back and slightly out", "alts": ["Glute kickback machine"]}, {"name": "Cable crunch", "sets": 3, "reps": "12 to 15", "note": "CABLE BLOCK 3 of 3. Rope high, kneel, round your spine down", "alts": ["Captain's chair knee raise"]}, {"name": "Seated calf raise", "sets": 3, "reps": "15 to 20", "note": "Slow, full range. Log total weight", "alts": ["Calf raise"]}]}, {"id": "d4", "name": "Day 4: Upper B", "when": "Friday", "color": "#818cf8", "exercises": [{"name": "Band pull aparts", "sets": 1, "reps": "2 x 20", "note": "Shoulder warm up", "cardio": true, "alts": ["Light face pulls"]}, {"name": "Seated cable row", "sets": 3, "reps": "10 to 12", "note": "Chest up, pull to belly button, squeeze", "alts": ["Machine row"]}, {"name": "Single arm lat pulldown", "sets": 3, "reps": "10 to 12 per arm", "note": "Elbow down to your hip, full stretch at the top", "alts": ["Lat pulldown (neutral grip)"]}, {"name": "Machine chest press (neutral grip)", "sets": 3, "reps": "10 to 12", "note": "Converging machine, same as Day 2", "alts": ["Iso lateral decline press"]}, {"name": "Straight arm cable pulldown", "sets": 3, "reps": "12 to 15", "note": "CABLE BLOCK 1 of 5, big cable machine by the dumbbells. Wide W bar, grip just outside shoulders", "alts": ["Band straight arm pulldown"]}, {"name": "Face pulls", "sets": 3, "reps": "15", "note": "CABLE BLOCK 2 of 5. Rope to forehead, elbows high", "alts": ["Band face pulls"]}, {"name": "Straight bar pushdown", "sets": 3, "reps": "10 to 12", "note": "CABLE BLOCK 3 of 5. Elbows pinned", "alts": ["Rope triceps pushdown"]}, {"name": "Rope cable curl", "sets": 3, "reps": "10 to 12", "note": "CABLE BLOCK 4 of 5. Rope hammer curl, palms facing", "alts": ["Hammer curl"]}, {"name": "Cable external rotation", "sets": 2, "reps": "15 per arm", "note": "CABLE BLOCK 5 of 5. Very light, elbow pinned to your side", "alts": ["Band external rotation"]}]}], "notes": [{"title": "How to run your sets", "text": "Do a light warm up first (not logged). Then 3 logged sets that all feel hard, each ending 2 or 3 reps short of failure, adding a little weight each set so the last is the hardest. Rest 2 min on big lifts, 60 to 90 sec on the rest."}, {"title": "How to progress", "text": "When you hit the top of the rep range on all 3 sets, go heavier next session. If you cannot reach the bottom of the range, go lighter."}, {"title": "Fat loss", "text": "Your deficit drives fat loss, not rep count. Lifting heavy keeps your muscle while the weight comes off, so keep the sets hard."}, {"title": "Cable blocks", "text": "Exercises marked CABLE BLOCK are done back to back at the same cable machine. If it's taken, use the other cable machine or move the block to the end."}, {"title": "Padel weeks", "text": "After a weekend of padel, if you rest Monday, run Day 1 to Day 4 Tue to Fri and skip Day 5. If the knee feels off on Day 1, lighten the leg press first."}, {"title": "Joint safety", "text": "No squats, deadlifts, lunges, pull ups, bench pressing, overhead pressing, or flies. Sharp pain or pain inside the joint means stop that exercise for the day."}, {"title": "Nutrition and recovery", "text": "About 180 to 220 g of protein daily, eaten first at every meal. Water plus electrolytes on training and padel days. Sleep 7 to 9 hours. Tell your prescriber if you feel unusually tired or lightheaded during training."}]};
 
 const MUSCLES = {
   "Leg press":"quads glutes|hamstrings", "Leg press (short range)":"quads glutes|hamstrings", "Single leg press":"quads glutes|hamstrings",
   "Leg extension":"quads|", "Leg extension (light)":"quads|", "Single leg extension":"quads|",
   "Hip thrust":"glutes|hamstrings", "Hip thrust machine":"glutes|hamstrings", "Barbell glute bridge":"glutes|hamstrings", "Glute bridge":"glutes|hamstrings", "Dumbbell glute bridge":"glutes|hamstrings",
-  "Seated leg curl":"hamstrings|calves", "Lying leg curl":"hamstrings|calves", "Stability ball leg curl":"hamstrings|glutes abs",
-  "Hip abduction machine":"glutes|", "Cable hip abduction":"glutes|", "Banded side steps":"glutes|", "Seated band abduction":"glutes|",
-  "Calf raise":"calves|", "Leg press calf raise":"calves|", "Seated calf raise":"calves|", "Standing dumbbell calf raise":"calves|",
-  "Cable crunch":"abs|obliques", "Machine crunch":"abs|", "Reverse crunch":"abs|", "Crunch on mat":"abs|", "Dead bug":"abs|", "Hollow body hold":"abs|",
+  "Seated leg curl":"hamstrings|calves", "Lying leg curl":"hamstrings|calves",
+  "Hip abduction machine":"glutes|", "Cable hip abduction":"glutes|", "Banded side steps":"glutes|",
+  "Calf raise":"calves|", "Leg press calf raise":"calves|", "Seated calf raise":"calves|",
+  "Cable crunch":"abs|obliques", "Machine crunch":"abs|", "Reverse crunch":"abs|", "Dead bug":"abs|", "Hollow body hold":"abs|",
   "Hanging knee raise":"abs|obliques forearms", "Captain's chair knee raise":"abs|obliques", "Plank":"abs|obliques",
-  "Side plank":"obliques|abs", "Side plank on knees":"obliques|abs", "Pallof press":"obliques abs|", "Band Pallof press":"obliques abs|",
-  "Lat pulldown (neutral grip)":"lats|biceps upperback", "Wide grip lat pulldown":"lats|biceps upperback", "Machine pulldown":"lats|biceps upperback",
-  "Single arm lat pulldown":"lats|biceps upperback", "Kneeling single arm cable pulldown":"lats|biceps", "Close grip pulldown":"lats|biceps upperback", "Single arm cable pulldown":"lats|biceps",
-  "Machine chest press (neutral grip)":"chest|triceps frontdelts", "Push ups":"chest|triceps frontdelts abs", "Cable chest press":"chest|triceps frontdelts",
-  "Incline machine press":"chest frontdelts|triceps", "Incline push ups":"chest|triceps frontdelts", "Dumbbell floor press":"chest|triceps frontdelts",
-  "Chest supported row":"upperback lats|reardelts biceps", "Machine row":"upperback lats|reardelts biceps", "Seated cable row":"upperback lats|reardelts biceps", "One arm dumbbell row":"lats upperback|biceps",
+  "Pallof press":"obliques abs|", "Band Pallof press":"obliques abs|",
+  "Lat pulldown (neutral grip)":"lats|biceps upperback", "Wide grip lat pulldown":"lats|biceps upperback",
+  "Single arm lat pulldown":"lats|biceps upperback", "Close grip pulldown":"lats|biceps upperback",
+  "Machine chest press (neutral grip)":"chest|triceps frontdelts", "Push ups":"chest|triceps frontdelts abs", "Cable chest press":"chest frontdelts|triceps",
+  "Incline machine press":"chest frontdelts|triceps", "Incline push ups":"chest|triceps frontdelts", "Iso lateral decline press":"chest|triceps",
+  "Chest supported row":"upperback lats|reardelts biceps", "Machine row":"upperback lats|reardelts biceps", "Seated cable row":"upperback lats|reardelts biceps",
   "Face pulls":"reardelts upperback|cuff", "Band face pulls":"reardelts upperback|cuff", "Light face pulls":"reardelts upperback|", "Band pull aparts":"reardelts upperback|",
-  "Cable external rotation":"cuff|reardelts", "Band external rotation":"cuff|reardelts", "Side lying dumbbell external rotation":"cuff|reardelts",
+  "Cable external rotation":"cuff|reardelts", "Band external rotation":"cuff|reardelts",
   "Dumbbell curl":"biceps|forearms", "EZ bar curl":"biceps|forearms", "Cable curl":"biceps|forearms", "Preacher curl":"biceps|forearms", "Incline dumbbell curl":"biceps|forearms",
-  "Hammer curl":"biceps forearms|", "Rope cable curl":"biceps forearms|", "Cross body curl":"biceps forearms|",
-  "Rope triceps pushdown":"triceps|", "Straight bar pushdown":"triceps|", "Single arm cable pushdown":"triceps|", "Dumbbell kickback":"triceps|",
-  "Lying dumbbell triceps extension":"triceps|", "EZ bar skull crusher":"triceps|",
+  "Hammer curl":"biceps forearms|", "Rope cable curl":"biceps forearms|",
+  "Rope triceps pushdown":"triceps|", "Straight bar pushdown":"triceps|", "Lying dumbbell triceps extension":"triceps|", "EZ bar skull crusher":"triceps|",
   "Back extension":"lowerback glutes hamstrings|", "Reverse hyper":"glutes lowerback|hamstrings", "Cable pull through":"glutes hamstrings|lowerback",
-  "Cable glute kickback":"glutes|hamstrings", "Glute kickback machine":"glutes|hamstrings", "Banded kickback":"glutes|hamstrings",
+  "Cable glute kickback":"glutes|hamstrings", "Glute kickback machine":"glutes|hamstrings",
   "Straight arm cable pulldown":"lats|triceps", "Band straight arm pulldown":"lats|triceps",
-  "Farmer's carry":"forearms upperback|abs obliques", "Suitcase carry":"obliques forearms|abs", "Trap bar carry":"forearms upperback|abs",
-  "Machine shrug":"upperback|forearms", "Dumbbell shrug":"upperback|forearms"
+  "Farmer's carry":"forearms upperback|abs obliques", "Suitcase carry":"obliques forearms|abs",
+  "Machine shrug":"upperback|forearms", "Dumbbell shrug":"upperback|forearms", "Dumbbell Romanian deadlift":"hamstrings glutes|lowerback"
 };
 const MLABEL = {chest:"Chest", frontdelts:"Front delts", biceps:"Biceps", forearms:"Forearms", abs:"Abs", obliques:"Obliques", quads:"Quads",
   calves:"Calves", upperback:"Upper back and traps", reardelts:"Rear delts", cuff:"Rotator cuff", lats:"Lats", triceps:"Triceps",
@@ -212,15 +140,13 @@ const REGIONS = [
   ["hamstrings",'<ellipse cx="143" cy="104" rx="6.5" ry="14"/><ellipse cx="157" cy="104" rx="6.5" ry="14"/>']
 ];
 
+// Calorie factors (MET values) for Light, Moderate, High intensity
 const ACTS = {
   "Basketball": [4.5, 6.5, 8],
   "Padel": [5, 6, 8],
-  "Pickleball": [4, 5, 6.5],
   "Walk": [3, 3.5, 4.5],
-  "Cycling": [4, 6.8, 8.5],
-  "Swimming": [4.5, 6, 8],
-  "Hiking": [5, 6, 7.5],
-  "Other": [3.5, 5, 7]
+  "Hot yoga": [3, 4, 5],
+  "Hot Pilates": [3.5, 4.5, 6]
 };
 const LEVELS = ["Light", "Moderate", "High"];
 const GYM_MET = 3.5;
@@ -247,10 +173,11 @@ function load(){
   let raw = null, s = null;
   try { raw = localStorage.getItem(KEY); s = JSON.parse(raw); } catch(e){}
   if (!s || !s.program) s = {program: clone(DEFAULT_PROGRAM), sessions: [], unit: "lb", draft: null};
-  if (!s.program.v || s.program.v < 3){
+  if (!s.program.v || s.program.v < 4 || !Array.isArray(s.program.days) || !s.program.days.length){
     if (raw) localStorage.setItem(KEY + ".beforeUpgrade", raw);
     s.program = clone(DEFAULT_PROGRAM);
   }
+  // Never discard a workout in progress: repair it to the current format instead
   if (s.draft && Array.isArray(s.draft.entries)){
     s.draft.entries.forEach(e => { if (!e.base) e.base = e.name; if (!e.alts) e.alts = []; if (!e.sets) e.sets = []; });
     if (!s.draft.checkIn) s.draft.checkIn = nowHM();
@@ -259,7 +186,8 @@ function load(){
   s.unit = s.unit || "lb"; s.bw = s.bw || ""; s.lastBackup = s.lastBackup || "";
   return s;
 }
-let S = load(), tab = "home", progEx = "", addOpen = false, planAdd = null;
+let S = load(), tab = "home", progDay = null, addOpen = false, planAdd = null;
+save();
 let actForm = {type: "Padel", lvl: 1, date: todayISO(), min: "", steps: "", note: ""};
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(S)); }
@@ -326,7 +254,7 @@ function allNames(){
 function nextDay(){
   const order = ["d1","d2","d3","d4"].filter(id => dayOf(id));
   if (!order.length) return S.program.days[0].id;
-  const last = sorted().reverse().find(s => order.includes(s.dayId));
+  const last = sorted().reverse().find(s => order.includes(s.dayId) && s.date >= S.program.start);
   return last ? order[(order.indexOf(last.dayId) + 1) % order.length] : order[0];
 }
 function fill(name, n){
@@ -353,17 +281,24 @@ function finish(){
   S.draft = null; save(); tab = "history"; render(); scrollTo(0,0);
 }
 
+function barChart(items, hi){
+  if (!items.some(w => w.k)) return `<div class="muted" style="padding:8px 0">Nothing logged yet.</div>`;
+  const n = items.length, W = 320, mx = Math.max(...items.map(w => w.k)) || 1, bw = Math.min(36, W / n * 0.6), gap = (W - bw * n) / (n + 1);
+  return `<svg viewBox="0 0 ${W} 130" class="chart"><defs><linearGradient id="gb" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#14b8a6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>` +
+    items.map((w, i) => { const h = Math.round(w.k / mx * 80), x = gap + i * (bw + gap);
+      return `<rect x="${x}" y="${100 - h}" width="${bw}" height="${h}" rx="5" fill="${i === hi ? "url(#gb)" : "#3b4670"}"/>
+        <text x="${x + bw / 2}" y="${94 - h}" text-anchor="middle">${w.k ? w.k : ""}</text><text x="${x + bw / 2}" y="118" text-anchor="middle">${w.label}</text>`; }).join("") +
+    `</svg>`;
+}
+function dayBars(){
+  const mon = mondayISO(), today = todayISO(), L = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const items = L.map((l, i) => { const d = addDays(mon, i); return {label: l, k: kcalBetween(d, addDays(d, 1)), d}; });
+  return `<div class="card"><b>This week by day</b><div class="muted">Estimated calories burned each day</div>${barChart(items, items.findIndex(x => x.d === today))}</div>`;
+}
 function weekBars(){
   const weeks = [];
   for (let i = 5; i >= 0; i--){ const a = mondayISO(i); weeks.push({label: a.slice(5).replace("-", "/"), k: kcalBetween(a, addDays(a, 7))}); }
-  if (!weeks.some(w => w.k)) return "";
-  const W = 320, H = 130, mx = Math.max(...weeks.map(w => w.k)) || 1, bw = 36, gap = (W - bw * 6) / 7;
-  return `<div class="card"><b>Calories by week</b><div class="muted">Estimated burn, gym plus activities</div>
-    <svg viewBox="0 0 ${W} ${H}" class="chart"><defs><linearGradient id="gb" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#14b8a6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>` +
-    weeks.map((w, i) => { const h = Math.round(w.k / mx * 80), x = gap + i * (bw + gap);
-      return `<rect x="${x}" y="${100 - h}" width="${bw}" height="${h}" rx="6" fill="${i === 5 ? "url(#gb)" : "#3b4670"}"/>
-        <text x="${x + bw / 2}" y="${94 - h}" text-anchor="middle">${w.k ? w.k : ""}</text><text x="${x + bw / 2}" y="118" text-anchor="middle">${w.label}</text>`; }).join("") +
-    `</svg></div>`;
+  return `<div class="card"><b>Calories by week</b><div class="muted">Estimated burn, gym plus activities</div>${barChart(weeks, 5)}</div>`;
 }
 
 function renderHome(){
@@ -382,6 +317,7 @@ function renderHome(){
   h += S.bw
     ? `<div class="card"><b>Calories burned (est.)</b><div class="stats"><div class="stat hot"><b>~${kcalBetween(today, addDays(today, 1))}</b><span class="muted">today</span></div><div class="stat"><b>~${kcalBetween(mon, addDays(mon, 7))}</b><span class="muted">this week</span></div></div></div>`
     : `<div class="card"><b>Calories burned</b><p class="muted">Add your body weight in Settings to see today's and this week's burn.</p></div>`;
+  if (S.bw) h += dayBars();
   h += `<div class="card"><div class="row between nowrap" style="margin:0"><b>This week</b><span class="muted">${w ? "Week " + n + " of " + S.program.weeks.length : ""}</span></div>
     <div class="stats three"><div class="stat"><b>${wk.length}</b><span class="muted">workouts</span></div><div class="stat"><b>${fmtDur(wkMin)}</b><span class="muted">in gym</span></div><div class="stat"><b>${wa.length}</b><span class="muted">activities</span></div></div>
     ${w ? `<p class="muted" style="margin-top:10px">${esc(w.focus)}</p>` : ""}</div>`;
@@ -442,6 +378,7 @@ function estText(){
   return m ? "~" + estKcal(ACTS[actForm.type][actForm.lvl], m) + " kcal" : "Enter minutes";
 }
 function renderActivity(){
+  if (!ACTS[actForm.type]) actForm.type = "Padel";
   const f = actForm, mon = mondayISO();
   const list = [...S.activities].sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
   const wa = S.activities.filter(a => a.date >= mon);
@@ -456,7 +393,7 @@ function renderActivity(){
     <button class="primary" style="margin-top:10px" data-act="saveact">Save activity</button></div>`;
   h += `<div class="card"><div class="row between nowrap" style="margin:0"><b>This week</b><span class="muted">${wa.length} activities · ${fmtDur(wa.reduce((a,x) => a + x.minutes, 0))}${S.bw ? " · ~" + wa.reduce((a,x) => a + (x.kcal || 0), 0) + " kcal" : ""}</span></div></div>`;
   if (list.length){
-    h += `<div class="card"><b>All activities</b>` + list.map(a => `<div class="hist"><span>${esc(a.type)} <small class="muted">${esc(LEVELS[a.lvl])}</small><br><small class="muted">${esc(a.date)} · ${fmtDur(a.minutes)}${a.steps ? " · " + esc(a.steps) + " steps" : ""}${a.note ? " · " + esc(a.note) : ""}</small></span>
+    h += `<div class="card"><b>All activities</b>` + list.map(a => `<div class="hist"><span>${esc(a.type)} <small class="muted">${esc(LEVELS[a.lvl] || "")}</small><br><small class="muted">${esc(a.date)} · ${fmtDur(a.minutes)}${a.steps ? " · " + esc(a.steps) + " steps" : ""}${a.note ? " · " + esc(a.note) : ""}</small></span>
       <span>${a.kcal ? "~" + a.kcal + " kcal" : ""}<br><button class="xs danger" data-adel="${a.id}">✕</button></span></div>`).join("") + `</div>`;
   }
   h += `<p class="muted" style="padding:0 4px">Calorie numbers are estimates from standard activity formulas using your body weight. Use them as a ballpark.</p>`;
@@ -474,28 +411,46 @@ function renderHistory(){
     <button class="xs danger" style="margin-top:10px" data-del="${s.id}">Delete workout</button></details>`).join("");
 }
 
-function chart(pts){
-  if (pts.length < 2) return `<div class="muted" style="padding:8px 0">Log this exercise at least twice to see the chart.</div>`;
-  const W = 320, H = 160, P = 30, ys = pts.map(p => p.w);
+function chart(pts, color){
+  if (pts.length < 2) return `<div class="muted" style="padding:6px 0">Log this at least twice to see the chart.</div>`;
+  const W = 320, H = 120, P = 30, ys = pts.map(p => p.v);
   let mn = Math.min(...ys), mx = Math.max(...ys); if (mn === mx){ mn -= 5; mx += 5; }
-  const x = i => P + i * (W - P - 10) / (pts.length - 1), y = v => H - 20 - (v - mn) * (H - 40) / (mx - mn);
-  const d = pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + "," + y(p.w).toFixed(1)).join(" ");
-  return `<svg viewBox="0 0 ${W} ${H}" class="chart"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#14b8a6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+  const x = i => P + i * (W - P - 10) / (pts.length - 1), y = v => H - 16 - (v - mn) * (H - 32) / (mx - mn);
+  const d = pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + "," + y(p.v).toFixed(1)).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart">
     <text x="0" y="${y(mx) + 4}">${mx}</text><text x="0" y="${y(mn) + 4}">${mn}</text>
-    <path d="${d}" fill="none" stroke="url(#g)" stroke-width="3"/>${pts.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.w)}" r="4" fill="#5eead4"/>`).join("")}</svg>`;
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="3"/>${pts.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.v)}" r="4" fill="${color}"/>`).join("")}</svg>`;
+}
+function seriesFor(name){
+  const rows = sorted().map(s => {
+    const e = s.entries.find(x => x.name === name && !x.cardio); if (!e) return null;
+    const sets = e.sets.filter(x => x.w || x.r); if (!sets.length) return null;
+    const ws = sets.map(x => parseFloat(x.w)).filter(v => !isNaN(v));
+    const rs = sets.map(x => parseFloat(x.r)).filter(v => !isNaN(v));
+    return {date: s.date, w: ws.length ? Math.max(...ws) : 0, r: rs.length ? Math.max(...rs) : 0, sets};
+  }).filter(Boolean);
+  const byReps = rows.length && rows.every(p => !p.w);
+  return {byReps, pts: rows.map(p => ({date: p.date, v: byReps ? p.r : p.w, sets: p.sets}))};
 }
 function renderProgress(){
-  const names = [...new Set(sorted().flatMap(s => s.entries.filter(e => !e.cardio && e.sets.some(x => parseFloat(x.w))).map(e => e.name)))];
-  if (!names.length){ $("#view").innerHTML = `<div class="card muted">Log some weights and your progress charts will appear here.</div>`; return; }
-  if (!names.includes(progEx)) progEx = names[0];
-  const pts = sorted().map(s => {
-    const e = s.entries.find(x => x.name === progEx); if (!e) return null;
-    const ws = e.sets.map(x => parseFloat(x.w)).filter(v => !isNaN(v));
-    return ws.length ? {date: s.date, w: Math.max(...ws), sets: e.sets.filter(x => x.w || x.r)} : null;
-  }).filter(Boolean);
-  $("#view").innerHTML = `<div class="card"><select id="progEx">${names.map(n => `<option ${n === progEx ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
-    ${musLine(progEx)}<div class="muted" style="margin-top:8px">Top set weight (${S.unit})</div>${chart(pts)}</div>
-    <div class="card">${pts.slice().reverse().map(p => `<div class="hist"><span>${esc(p.date)}</span><span>${p.sets.map(x => esc(x.w || 0) + " x " + esc(x.r || 0)).join(", ")}</span></div>`).join("")}</div>`;
+  if (!progDay || !dayOf(progDay)) progDay = S.draft && dayOf(S.draft.dayId) ? S.draft.dayId : nextDay();
+  const d = dayOf(progDay), c = d.color || "#5eead4";
+  let h = `<div class="card"><div class="chips">${S.program.days.map(x => `<button class="xs ${x.id === progDay ? "sel" : ""}" data-pday="${x.id}">${esc(x.name.split(": ")[1] || x.name)}</button>`).join("")}</div>
+    <div class="muted" style="margin-top:8px">${esc(d.name)} · top set each session</div></div>`;
+  const names = [];
+  d.exercises.filter(e => !e.cardio).forEach(e => {
+    [e.name, ...(e.alts || [])].forEach((n, k) => { if (!names.includes(n) && (k === 0 || seriesFor(n).pts.length)) names.push(n); });
+  });
+  if (S.draft && S.draft.dayId === progDay) S.draft.entries.forEach(e => { if (!e.cardio && !names.includes(e.name)) names.push(e.name); });
+  names.forEach(n => {
+    const {byReps, pts} = seriesFor(n), last = pts[pts.length - 1], first = pts[0];
+    const diff = pts.length > 1 ? last.v - first.v : 0;
+    h += `<div class="card" style="border-left:5px solid ${c}"><div class="row between nowrap" style="margin:0"><b>${esc(n)}</b><span class="muted">${byReps ? "reps" : S.unit}</span></div>${musLine(n)}
+      ${last ? `<div class="last">Last (${esc(last.date)}): ${last.sets.map(x => esc(x.w || 0) + " x " + esc(x.r || 0)).join(", ")}</div>` : `<div class="muted" style="margin-top:6px">Not logged yet.</div>`}
+      ${pts.length > 1 ? `<div class="pbest">${diff > 0 ? "▲ +" + diff : diff < 0 ? "▼ " + diff : "No change"} ${byReps ? "reps" : S.unit} since ${esc(first.date)}</div>` : ""}
+      ${last ? chart(pts, c) : ""}</div>`;
+  });
+  $("#view").innerHTML = h;
 }
 
 function renderPlan(){
@@ -533,7 +488,7 @@ function renderSettings(){
       <label class="btn sm" style="padding:9px 13px">Import backup<input type="file" accept=".json,application/json" id="imp" hidden></label></div></div>
     <div class="card"><h3>Monthly program</h3><p class="muted">Paste a new program here each month and tap Save. Your history, activities, notes, and charts are kept.</p>
       <textarea id="prog" rows="12" style="font-family:ui-monospace,monospace;font-size:12px">${esc(JSON.stringify(S.program, null, 1))}</textarea>
-      <div class="row"><button class="primary sm" data-act="saveprog">Save program</button><button class="sm" data-act="resetprog">Reset to default program</button></div></div>`;
+      <div class="row"><button class="primary sm" data-act="saveprog">Save program</button></div></div>`;
 }
 
 async function exportData(){
@@ -554,7 +509,8 @@ function render(){
 }
 
 document.querySelector("nav").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (b){ tab = b.dataset.tab; render(); scrollTo(0,0); }
+  const b = e.target.closest("button"); if (!b) return;
+  tab = b.dataset.tab; if (tab === "progress") progDay = null; render(); scrollTo(0,0);
 });
 $("#gear").addEventListener("click", () => { tab = "settings"; render(); scrollTo(0,0); });
 
@@ -572,8 +528,7 @@ $("#view").addEventListener("input", e => {
 
 $("#view").addEventListener("change", e => {
   const t = e.target, d = t.dataset;
-  if (t.id === "progEx"){ progEx = t.value; render(); }
-  else if (t.id === "aDate"){ actForm.date = t.value; }
+  if (t.id === "aDate"){ actForm.date = t.value; }
   else if (d.alt !== undefined && S.draft){
     const en = S.draft.entries[d.alt]; en.name = t.value; en.sets = fill(en.name, en.sets.length || 1); save(); render();
   }
@@ -587,7 +542,7 @@ $("#view").addEventListener("change", e => {
         const b = JSON.parse(txt); if (!b.program || !Array.isArray(b.sessions)) throw 0;
         if (confirm("Replace everything on this phone with this backup?")){
           b.notes = b.notes || {}; b.activities = b.activities || [];
-          S = b; save(); S = load(); save(); render(); alert("Backup restored");
+          localStorage.setItem(KEY, JSON.stringify(b)); S = load(); save(); render(); alert("Backup restored");
         }
       } catch(err){ alert("That file is not a valid backup."); }
     });
@@ -600,6 +555,7 @@ $("#view").addEventListener("click", e => {
   const ij = v => v.split(":").map(Number);
   if ("start" in d){ if (dr && !confirm("You already have a workout in progress. Replace it?")) return; startDay(d.start); }
   else if ("go" in d){ tab = d.go; render(); scrollTo(0,0); }
+  else if ("pday" in d){ progDay = d.pday; render(); scrollTo(0,0); }
   else if ("done" in d){ const [i, j] = ij(d.done); const en = dr.entries[i]; if (!en.sets[j]) en.sets[j] = {w:"", r:"", done:false}; en.sets[j].done = !en.sets[j].done; save(); render(); }
   else if ("add" in d){ const en = dr.entries[d.add], prev = en.sets[en.sets.length - 1]; en.sets.push({w: prev ? prev.w : "", r: "", done: false}); save(); render(); }
   else if ("rm" in d){ dr.entries[d.rm].sets.pop(); save(); render(); }
@@ -646,10 +602,9 @@ $("#view").addEventListener("click", e => {
   else if (d.act === "saveprog"){
     try {
       const p = JSON.parse($("#prog").value); if (!p.days || !p.start) throw 0;
-      p.v = p.v || 3; S.program = p; save(); alert("Program saved"); tab = "plan"; render();
+      p.v = Math.max(p.v || 4, 4); S.program = p; save(); alert("Program saved"); tab = "plan"; render();
     } catch(err){ alert("Could not read that program. Check the text you pasted."); }
   }
-  else if (d.act === "resetprog"){ if (confirm("Reset the program to the default? History, activities, and notes are kept.")){ S.program = clone(DEFAULT_PROGRAM); save(); render(); } }
 });
 
 setInterval(() => {
