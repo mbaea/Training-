@@ -75,12 +75,20 @@ p{margin:4px 0;line-height:1.45}
 .chkline input{width:auto}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 label.muted input{margin-top:4px}
+.go{font-size:13px;margin:6px 0;padding:7px 10px;border-radius:9px;background:#11303a;color:#7dd3fc}
+.go.up{background:#14321f;color:#86efac}
+.prb{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:99px;background:#4a3a0c;color:#fde68a;font-size:12px;font-weight:700}
+#timer{position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom));display:none;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:#1e2a4f;border:1px solid #3b4a80;box-shadow:0 6px 20px rgba(0,0,0,.4);z-index:5}
+#timer.done{background:#14532d;border-color:#22c55e}
+#timer b{font-size:22px;flex:1}
+#toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);display:none;padding:12px 18px;border-radius:14px;background:#4a3a0c;color:#fde68a;font-weight:700;z-index:6;text-align:center;max-width:90%}
 .pbest{font-size:13px;color:var(--ok);margin-top:4px}
 </style>
 </head>
 <body>
 <header><h1>Training</h1><button class="xs" id="gear">⚙︎ Settings</button></header>
 <main id="view"></main>
+<div id="timer"></div><div id="toast"></div>
 <nav>
   <button data-tab="home"><i>⌂</i>Home</button>
   <button data-tab="today"><i>◉</i>Workout</button>
@@ -267,6 +275,58 @@ function makeEntry(x){
 }
 function move(arr, i, j){ if (j < 0 || j >= arr.length) return; const [it] = arr.splice(i, 1); arr.splice(j, 0, it); }
 
+function range(target){
+  const rest = String(target || "").split(" x ").slice(1).join(" x "), n = rest.match(/\d+/g);
+  return n ? {lo: +n[0], hi: +(n[1] || n[0])} : null;
+}
+const topW = sets => Math.max(0, ...sets.map(s => parseFloat(s.w)).filter(v => !isNaN(v)));
+function bestBefore(name){ let b = 0; S.sessions.forEach(s => s.entries.forEach(e => { if (e.name === name && !e.cardio) b = Math.max(b, topW(e.sets)); })); return b; }
+const roundTo = (v, step) => Math.round(v / step) * step;
+function advice(e){
+  if (e.cardio) return "";
+  const last = lastFor(e.name), r = range(e.target); if (!last || !r) return "";
+  const reps = last.sets.map(s => parseFloat(s.r)).filter(v => !isNaN(v)); if (!reps.length) return "";
+  const top = topW(last.sets), u = S.unit, step = u === "kg" ? 2.5 : 5;
+  if (weekInfo().n === 1 && top) return `<div class="go">Light week: use about ${roundTo(top * 0.85, step)} ${u} for your working sets</div>`;
+  if (reps.length >= Math.min(3, e.sets.length) && reps.every(x => x >= r.hi))
+    return top ? `<div class="go up">⬆ Go heavier: try ${top + (u === "kg" ? (top >= 40 ? 5 : 2.5) : (top >= 100 ? 10 : 5))} ${u} today</div>`
+               : `<div class="go up">⬆ You hit ${r.hi} on every set: add reps or make it harder</div>`;
+  if (reps.some(x => x < r.lo)) return `<div class="go">Stay at this weight until you hit ${r.hi} reps on every set</div>`;
+  return `<div class="go">Same weight, aim for ${r.hi} reps on every set</div>`;
+}
+let restEnd = 0, restDoneAt = 0;
+function startRest(sec){ restEnd = Date.now() + sec * 1000; restDoneAt = 0; tickTimer(); }
+function tickTimer(){
+  const el = $("#timer"); if (!el) return;
+  if (!restEnd && !restDoneAt){ el.style.display = "none"; return; }
+  const left = Math.ceil((restEnd - Date.now()) / 1000);
+  if (restEnd && left <= 0){ restEnd = 0; restDoneAt = Date.now(); try { navigator.vibrate && navigator.vibrate([300,150,300]); } catch(e){} }
+  if (restDoneAt){
+    if (Date.now() - restDoneAt > 8000){ restDoneAt = 0; el.style.display = "none"; return; }
+    el.className = "done"; el.style.display = "flex"; el.innerHTML = `<b>Rest done, next set 💪</b><button class="xs" data-t="close">OK</button>`; return;
+  }
+  el.className = ""; el.style.display = "flex";
+  el.innerHTML = `<span class="muted">Rest</span><b>${Math.floor(left / 60)}:${pad(left % 60)}</b><button class="xs" data-t="add">+30s</button><button class="xs" data-t="skip">Skip</button>`;
+}
+let toastT = 0;
+function toast(msg){ const el = $("#toast"); el.textContent = msg; el.style.display = "block"; clearTimeout(toastT); toastT = setTimeout(() => el.style.display = "none", 3500); }
+function weekSummary(){
+  const a = mondayISO(1), b = mondayISO();
+  const ss = S.sessions.filter(s => s.date >= a && s.date < b), as = S.activities.filter(x => x.date >= a && x.date < b);
+  if (!ss.length && !as.length) return "";
+  const gym = ss.reduce((t, s) => t + mins(s.checkIn, s.checkOut), 0), ups = [];
+  ss.forEach(s => s.entries.forEach(e => {
+    if (e.cardio || ups.some(u => u.n === e.name)) return;
+    const now = topW(e.sets); if (!now) return;
+    const prev = sorted().filter(x => x.date < a).reverse().find(x => x.entries.some(y => y.name === e.name && topW(y.sets)));
+    if (!prev) return; const was = topW(prev.entries.find(y => y.name === e.name).sets);
+    if (now > was) ups.push({n: e.name, was, now});
+  }));
+  return `<div class="card"><b>Last week recap</b> <span class="muted">${esc(a.slice(5).replace("-", "/"))} to ${esc(addDays(a, 6).slice(5).replace("-", "/"))}</span>
+    <div class="stats three"><div class="stat"><b>${ss.length}</b><span class="muted">workouts</span></div><div class="stat"><b>${fmtDur(gym)}</b><span class="muted">in gym</span></div><div class="stat"><b>${S.bw ? "~" + kcalBetween(a, b) : as.length}</b><span class="muted">${S.bw ? "kcal" : "activities"}</span></div></div>
+    ${ups.length ? `<div class="muted" style="margin-top:10px">Lifts that went up</div>` + ups.slice(0, 6).map(u => `<div class="hist"><span>${esc(u.n)}</span><span style="color:var(--ok)">${u.was} → ${u.now} ${S.unit}</span></div>`).join("") : `<p class="muted" style="margin-top:10px">No lifts went up last week. Push for it this week.</p>`}</div>`;
+}
+
 function startDay(id){
   const d = dayOf(id);
   S.draft = {dayId: id, dayName: d.name, date: todayISO(), checkIn: nowHM(), entries: d.exercises.map(makeEntry)};
@@ -314,6 +374,7 @@ function renderHome(){
   if (ds >= 7 && (S.sessions.length || S.activities.length)){
     h += `<div class="card warncard"><b>Back up your data</b><p class="muted">${S.lastBackup ? "Last backup was " + ds + " days ago." : "You haven't made a backup yet."} Save it to iCloud Drive so nothing can be lost.</p><div class="row"><button class="primary sm" data-act="export">Back up now</button></div></div>`;
   }
+  h += weekSummary();
   h += S.bw
     ? `<div class="card"><b>Calories burned (est.)</b><div class="stats"><div class="stat hot"><b>~${kcalBetween(today, addDays(today, 1))}</b><span class="muted">today</span></div><div class="stat"><b>~${kcalBetween(mon, addDays(mon, 7))}</b><span class="muted">this week</span></div></div></div>`
     : `<div class="card"><b>Calories burned</b><p class="muted">Add your body weight in Settings to see today's and this week's burn.</p></div>`;
@@ -343,15 +404,17 @@ function renderToday(){
   dr.entries.forEach((e, i) => {
     const opts = [e.base, ...e.alts]; if (!opts.includes(e.name)) opts.push(e.name);
     const last = lastFor(e.name), allDone = e.sets.length && e.sets.every(s => s.done);
+    const best = e.cardio ? 0 : bestBefore(e.name), isPR = best > 0 && topW(e.sets.filter(s => s.done)) > best;
     h += `<div class="card ex ${allDone ? "done" : ""}" style="--c:${c}">
-      <div class="row between nowrap" style="margin:0"><span class="muted">${i + 1} of ${dr.entries.length} · ${esc(e.target)}</span>
+      <div class="row between nowrap" style="margin:0"><span class="muted">${i + 1} of ${dr.entries.length} · ${esc(e.target)}${isPR ? `<span class="prb">🏆 PR</span>` : ""}</span>
         <div class="tools"><button class="xs" data-up="${i}" ${i ? "" : "disabled"}>↑</button><button class="xs" data-down="${i}" ${i < dr.entries.length - 1 ? "" : "disabled"}>↓</button><button class="xs danger" data-x="${i}">✕</button></div></div>
       ${opts.length > 1
         ? `<select class="exname" data-alt="${i}">${opts.map((o, k) => `<option value="${esc(o)}" ${o === e.name ? "selected" : ""}>${k ? "Alt: " : ""}${esc(o)}</option>`).join("")}</select>`
         : `<div class="exname">${esc(e.name)}</div>`}
       ${e.cardio ? "" : musLine(e.name)}
       <div class="row between nowrap"><span class="muted">${esc(e.name === e.base ? e.note : "Alternative for " + e.base)}</span><a class="form" target="_blank" href="${formUrl(e.name)}">Form ↗</a></div>
-      ${last ? `<div class="last">Last (${esc(last.date)}): ${last.sets.map(s => esc(s.w || 0) + S.unit + " x " + esc(s.r || 0)).join(", ")}</div>` : ""}
+      ${last ? `<div class="last">Last (${esc(last.date)}): ${last.sets.map(s => esc(s.w || 0) + S.unit + " x " + esc(s.r || 0)).join(", ")}${best ? " · Best: " + best + S.unit : ""}</div>` : ""}
+      ${advice(e)}
       ${e.cardio
         ? `<div class="row"><button class="chk ${e.sets[0] && e.sets[0].done ? "on" : ""}" style="width:100%" data-done="${i}:0">${e.sets[0] && e.sets[0].done ? "Done ✓" : "Mark done"}</button></div>`
         : e.sets.map((s, j) => `<div class="set"><span class="muted">${j + 1}</span>
@@ -512,6 +575,13 @@ document.querySelector("nav").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   tab = b.dataset.tab; if (tab === "progress") progDay = null; render(); scrollTo(0,0);
 });
+$("#timer").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.t === "add"){ restEnd = Math.max(restEnd, Date.now()) + 30000; restDoneAt = 0; }
+  else { restEnd = 0; restDoneAt = 0; }
+  tickTimer();
+});
+setInterval(tickTimer, 1000);
 $("#gear").addEventListener("click", () => { tab = "settings"; render(); scrollTo(0,0); });
 
 $("#view").addEventListener("input", e => {
@@ -556,7 +626,14 @@ $("#view").addEventListener("click", e => {
   if ("start" in d){ if (dr && !confirm("You already have a workout in progress. Replace it?")) return; startDay(d.start); }
   else if ("go" in d){ tab = d.go; render(); scrollTo(0,0); }
   else if ("pday" in d){ progDay = d.pday; render(); scrollTo(0,0); }
-  else if ("done" in d){ const [i, j] = ij(d.done); const en = dr.entries[i]; if (!en.sets[j]) en.sets[j] = {w:"", r:"", done:false}; en.sets[j].done = !en.sets[j].done; save(); render(); }
+  else if ("done" in d){ const [i, j] = ij(d.done); const en = dr.entries[i]; if (!en.sets[j]) en.sets[j] = {w:"", r:"", done:false}; en.sets[j].done = !en.sets[j].done;
+    if (en.sets[j].done && !en.cardio){
+      const big = dr.entries.filter(x => !x.cardio).indexOf(en) < 2;
+      startRest(big ? 120 : 90);
+      const w = parseFloat(en.sets[j].w), b = bestBefore(en.name);
+      if (w > 0 && b > 0 && w > b && !en.sets.some((s, k) => k !== j && s.done && parseFloat(s.w) >= w)) toast("🏆 New PR: " + en.name + " " + w + " " + S.unit);
+    }
+    save(); render(); }
   else if ("add" in d){ const en = dr.entries[d.add], prev = en.sets[en.sets.length - 1]; en.sets.push({w: prev ? prev.w : "", r: "", done: false}); save(); render(); }
   else if ("rm" in d){ dr.entries[d.rm].sets.pop(); save(); render(); }
   else if ("up" in d){ move(dr.entries, +d.up, +d.up - 1); save(); render(); }
